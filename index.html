@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Service Evaluation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #003366;
+            --accent-color: #D4AF37;
+            --bg-color: #f4f7f6;
+            --container-bg: #ffffff;
+            --text-color: #333333;
+            --input-border: #dddddd;
+            --input-bg: #ffffff;
+            --option-bg: #f9f9f9;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #66b2ff;
+            --accent-color: #D4AF37;
+            --bg-color: #121212;
+            --container-bg: #1e1e1e;
+            --text-color: #e0e0e0;
+            --input-border: #444444;
+            --input-bg: #2d2d2d;
+            --option-bg: #2d2d2d;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            background: var(--container-bg);
+            padding: 40px;
+            margin: 0 auto;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border-top: 5px solid var(--accent-color);
+            position: relative;
+        }
+
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--input-border); }
+        .lang-switch button { background: none; border: 1px solid var(--input-border); color: var(--text-color); padding: 5px 10px; cursor: pointer; border-radius: 4px; margin-left: 5px; font-size: 14px; }
+        .lang-switch button.active { background-color: var(--accent-color); color: #000; border-color: var(--accent-color); }
+        .theme-toggle { cursor: pointer; font-size: 20px; background: none; border: none; color: var(--text-color); }
+
+        .header { text-align: center; margin-bottom: 30px; }
+        .header img { max-width: 250px; margin-bottom: 15px; }
+        h1 { color: var(--primary-color); font-size: 24px; margin-bottom: 10px; }
+        p.intro { font-size: 14px; opacity: 0.8; font-style: italic; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: bold; margin-bottom: 8px; color: var(--primary-color); }
+        .sub-text { font-size: 0.85em; color: #777; margin-top: -5px; margin-bottom: 10px; font-style: italic; display: block;}
+
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid var(--input-border); border-radius: 6px; box-sizing: border-box; font-size: 16px; background-color: var(--input-bg); color: var(--text-color); transition: border 0.3s; }
+        .radio-group, .checkbox-group { background: var(--option-bg); padding: 15px; border-radius: 6px; border: 1px solid var(--input-border); }
+        .option-item { display: flex; align-items: start; margin-bottom: 10px; }
+        .option-item input { margin-right: 10px; width: 18px; height: 18px; cursor: pointer; margin-top: 3px; }
+        .option-item label { margin-bottom: 0; font-weight: normal; color: var(--text-color); cursor: pointer; line-height: 1.4; }
+        
+        button.submit-btn { width: 100%; background-color: var(--primary-color); color: white; padding: 15px; font-size: 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 20px; transition: background 0.3s; }
+        button.submit-btn:hover { opacity: 0.9; }
+        button.submit-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        .loading, .success-message, .error-message { display: none; text-align: center; margin-top: 20px; padding: 15px; border-radius: 8px; }
+        .loading { color: var(--primary-color); font-weight: bold; }
+        .success-message { color: green; background: rgba(0, 128, 0, 0.1); border: 1px solid green; }
+        .error-message { color: red; background: rgba(255, 0, 0, 0.1); border: 1px solid red; }
+
+        .module-section { border: 1px dashed var(--accent-color); border-radius: 8px; padding: 20px; margin-top: 30px; display: none; background-color: rgba(212, 175, 55, 0.05); }
+        .module-section.active { display: block; animation: fadeIn 0.5s; }
+        .module-title { color: var(--primary-color); border-bottom: 1px solid var(--input-border); padding-bottom: 10px; margin-bottom: 20px; font-size: 1.2em; text-transform: uppercase; }
+        
+        .rating-scale { display: flex; justify-content: space-between; max-width: 350px; margin: 10px 0; }
+        .rating-item { text-align: center; }
+        .rating-item div { font-size: 0.8em; margin-top: 5px; opacity: 0.8; }
+
+        #dashboard { display: none; margin-top: 40px; border-top: 2px dashed #ccc; padding-top: 30px; }
+        .stats-card { background: var(--option-bg); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; border: 1px solid var(--input-border); }
+        .stat-number { font-size: 2.5em; font-weight: bold; color: var(--primary-color); }
+        .chart-grid { display: grid; grid-template-columns: 1fr; gap: 20px; margin-top: 20px; }
+        .chart-container { position: relative; height: 250px; width: 100%; }
+        .dashboard-footer { margin-top: 30px; text-align: center; font-size: 0.9em; color: #777; font-style: italic; border-top: 1px solid var(--input-border); padding-top: 15px; }
+        
+        @media (min-width: 600px) { .chart-grid { grid-template-columns: 1fr 1fr; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .retry-btn { margin-top:15px; padding:10px 20px; background: var(--accent-color); color:#000; border:none; border-radius:4px; font-weight:bold; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="top-bar">
+        <button class="theme-toggle" id="themeToggle" title="Tun/Kun">☀️</button>
+        <div class="lang-switch">
+            <button onclick="setLanguage('uz')" id="btn-uz" class="active">O'Z</button>
+            <button onclick="setLanguage('ru')" id="btn-ru">РУ</button>
+            <button onclick="setLanguage('en')" id="btn-en">EN</button>
+        </div>
+    </div>
+
+    <div class="header">
+        <img src="https://raw.githubusercontent.com/sunattagayev-cloud/Bank-mijozlari-uchun-so-rovnoma/refs/heads/main/Logo_03.svg" alt="Logo">
+        <h1 data-key="title">Bank xizmatlarini baholash</h1>
+        <p class="intro" data-key="intro">Hurmatli mijoz, sizning fikringiz bizning rivojlanishimiz uchun muhim. So'rovnoma anonim tarzda o'tkaziladi.</p>
+    </div>
+
+    <form id="bankForm">
+        <input type="hidden" name="IP" id="userIP">
+        
+        <!-- I. KIRISH (PROFIL) -->
+        <h3 style="color: var(--text-color); border-bottom: 1px solid var(--input-border); padding-bottom: 5px; font-size: 1.1em;" data-key="sec_general">I. KIRISH VA PROFIL</h3>
+
+        <div class="form-group">
+            <label data-key="lbl_client_type">1.1. Siz bank xizmatlaridan kim sifatida foydalanasiz?</label>
+            <div class="radio-group" id="clientTypeFilter">
+                <div class="option-item"><input type="radio" name="Mijoz_Tipi" value="Jismoniy shaxs" required onchange="toggleAgeField()"><label data-key="opt_person">Jismoniy shaxs</label></div>
+                <div class="option-item"><input type="radio" name="Mijoz_Tipi" value="Yuridik shaxs" onchange="toggleAgeField()"><label data-key="opt_legal">Yuridik shaxs (Tadbirkor / Firma rahbari)</label></div>
+            </div>
+        </div>
+
+        <div class="form-group" id="ageField" style="display:none;">
+            <label data-key="lbl_age">1.2. Sizning yoshingiz?</label>
+            <div class="radio-group">
+                <div class="option-item"><input type="radio" name="Yosh" value="18-25"><label>18-25</label></div>
+                <div class="option-item"><input type="radio" name="Yosh" value="26-35"><label>26-35</label></div>
+                <div class="option-item"><input type="radio" name="Yosh" value="36-50"><label>36-50</label></div>
+                <div class="option-item"><input type="radio" name="Yosh" value="50+"><label>50+</label></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label data-key="lbl_region">1.3. Asosiy hududingiz</label>
+            <select name="Hudud" required id="regionSelect" style="margin-bottom: 10px;"><option value="" data-key="sel_region">Yuklanmoqda...</option></select>
+            <select name="Tuman" required id="districtSelect"><option value="" data-key="sel_district">Avval hududni tanlang</option></select>
+        </div>
+
+        <div class="form-group">
+            <label data-key="lbl_gender">1.4. Jinsingiz</label>
+            <div class="radio-group" style="display: flex; gap: 20px;">
+                <div class="option-item"><input type="radio" name="Jinsi" value="Erkak" required><label data-key="gender_male">Erkak</label></div>
+                <div class="option-item"><input type="radio" name="Jinsi" value="Ayol"><label data-key="gender_female">Ayol</label></div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label data-key="lbl_contact">Bog'lanish uchun (Ixtiyoriy)</label>
+            <span class="sub-text" data-key="contact_hint">Bank bilan bog'liq muammolarni yechishda aloqa qilish imkoni bo'lishi uchun.</span>
+            <input type="text" name="Telefon" placeholder="+998 90 123 45 67" style="margin-bottom: 10px;" data-ph="ph_phone">
+            <input type="email" name="Email" placeholder="example@gmail.com" data-ph="ph_email">
+        </div>
+
+        <div class="form-group">
+            <label data-key="lbl_source">1.5. Bank haqida qayerdan xabar topdingiz?</label>
+            <select name="Manba" required>
+                <option value="" data-key="sel_default">-- Tanlang --</option>
+                <option value="Tanishlar" data-key="src_friends">Tanishlar</option>
+                <option value="Reklama" data-key="src_ads">Reklama</option>
+                <option value="Telegram">Telegram</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Facebook">Facebook</option>
+                <option value="Youtube">Youtube</option>
+                <option value="Google/Yandex">Google/Yandex</option>
+                <option value="2GIS / Maps" data-key="src_map">2GIS / Maps</option>
+                <option value="Eski mijoz" data-key="src_client">Eski mijoz</option>
+                <option value="Tasodifan" data-key="src_random">Tasodifan</option>
+                <option value="Boshqa" data-key="src_other">Boshqa</option>
+            </select>
+        </div>
+
+        <!-- II. FILTRLASH -->
+        <h3 style="color: var(--text-color); border-bottom: 1px solid var(--input-border); padding-bottom: 5px; font-size: 1.1em; margin-top: 30px;" data-key="sec_filter">II. FILTRLASH (Yo'naltiruvchi qism)</h3>
+
+        <div class="form-group">
+            <label data-key="lbl_bank">2.1. Qaysi bankni baholamoqchisiz?</label>
+            <select name="Bank_Nomi" id="bankSelect" required>
+                <option value="" data-key="sel_bank"> Bank nomini tanlang... </option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label data-key="lbl_services">2.1. So'nggi 6 oy ichida bankning qaysi xizmatlaridan/kanallaridan foydalandingiz?</label>
+            <div class="checkbox-group" id="servicesFilter">
+                <div class="option-item"><input type="checkbox" name="Xizmatlar" value="Ofis" onchange="toggleModules()"><label data-key="srv_ofis">Bank ofisi (Filial)</label></div>
+                <div class="option-item"><input type="checkbox" name="Xizmatlar" value="Kredit" onchange="toggleModules()"><label data-key="srv_kredit">Kredit mahsulotlari</label></div>
+                <div class="option-item"><input type="checkbox" name="Xizmatlar" value="Omonat" onchange="toggleModules()"><label data-key="srv_omonat">Omonatlar (Depozitlar)</label></div>
+                <div class="option-item"><input type="checkbox" name="Xizmatlar" value="Karta" onchange="toggleModules()"><label data-key="srv_karta">Bank kartalari</label></div>
+                <div class="option-item"><input type="checkbox" name="Xizmatlar" value="Ilova" onchange="toggleModules()"><label data-key="srv_ilova">Masofaviy xizmatlar (App)</label></div>
+                <div class="option-item"><input type="checkbox" name="Xizmatlar" value="Bankomat" onchange="toggleModules()"><label data-key="srv_bankomat">Bankomat va Infokiosk</label></div>
+                <div class="option-item"><input type="checkbox" name="Xizmatlar" value="Call-center" onchange="toggleModules()"><label data-key="srv_call">Aloqa markazi (Call-center)</label></div>
+            </div>
+        </div>
+
+        <!-- MODULES (SO.DOCX) -->
+        
+        <!-- A: OFFICE -->
+        <div id="module_ofis" class="module-section">
+            <h3 class="module-title" data-key="mod_a_title">🏢 A-MODUL: Bank ofisi va Xodimlar</h3>
+            
+            <div class="form-group">
+                <label data-key="a1_q">A1. Filialga kirganda navbat kutish vaqtingiz o'rtacha qancha?</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="A_Navbat" value="0-5 daqiqa"><label data-key="a1_opt1">Navbat deyarli yo'q (0-5 daqiqa)</label></div>
+                    <div class="option-item"><input type="radio" name="A_Navbat" value="5-15 daqiqa"><label data-key="a1_opt2">O'rtacha (5-15 daqiqa)</label></div>
+                    <div class="option-item"><input type="radio" name="A_Navbat" value="15-40 daqiqa"><label data-key="a1_opt3">Uzoq (15-40 daqiqa)</label></div>
+                    <div class="option-item"><input type="radio" name="A_Navbat" value="40+ daqiqa"><label data-key="a1_opt4">Juda uzoq (40 daqiqadan ko'p)</label></div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label data-key="a2_q">A2. Xodimlarning kompetensiyasi (bilim darajasi) va muomalasi:</label>
+                <span class="sub-text" data-key="a2_hint">(Madaniyat, xushmuomalalik, tanish-bilishchiliksiz xizmat)</span>
+                <select name="A_Xodimlar">
+                    <option value="" data-key="sel_default">-- Tanlang --</option>
+                    <option value="A'lo" data-key="rate_good">A'lo (Barchasi joyida)</option>
+                    <option value="Yaxshi" data-key="rate_ok">Yaxshi</option>
+                    <option value="Qoniqarsiz" data-key="rate_bad">Qoniqarsiz (Muammo hal bo'lmadi)</option>
+                    <option value="Yomon" data-key="rate_awful">Yomon (Qo'pol muomala)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label data-key="a3_q">A3. Bankdagi qulayliklar bo'yicha fikringiz:</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="A_Sharoit" value="Qulay"><label data-key="cond_good">Kutish zali qulay (o'rindiqlar, konditsioner yetarli)</label></div>
+                    <div class="option-item"><input type="radio" name="A_Sharoit" value="Qoniqarli"><label data-key="cond_mid">Sharoit qoniqarli</label></div>
+                    <div class="option-item"><input type="radio" name="A_Sharoit" value="Yomon"><label data-key="cond_bad">Sharoit yomon (joy yetishmaydi, dim, tartibsizlik)</label></div>
+                </div>
+            </div>
+
+            <div class="form-group"><label data-key="rating_aq">OFIS XIZMATI SIFATI (1-5):</label><div class="rating-scale"><label class="rating-item"><input type="radio" name="A_Baho" value="1"><div>1</div></label><label class="rating-item"><input type="radio" name="A_Baho" value="2"><div>2</div></label><label class="rating-item"><input type="radio" name="A_Baho" value="3"><div>3</div></label><label class="rating-item"><input type="radio" name="A_Baho" value="4"><div>4</div></label><label class="rating-item"><input type="radio" name="A_Baho" value="5"><div>5</div></label></div></div>
+        </div>
+
+        <!-- B: CREDIT -->
+        <div id="module_kredit" class="module-section">
+            <h3 class="module-title" data-key="mod_b_title">💰 B-MODUL: Kreditlar</h3>
+            
+            <div class="form-group">
+                <label data-key="b1_q">B1. Kredit olish jarayonidagi eng katta qiyinchilik nima bo'ldi?</label>
+                <select name="B_Qiyinchilik">
+                    <option value="" data-key="sel_default">-- Tanlang --</option>
+                    <option value="Hujjatlar ko'pligi" data-key="b1_opt1">Keraksiz hujjatlarning ko'pligi</option>
+                    <option value="Muddat cho'zilishi" data-key="b1_opt2">Arizani ko'rib chiqish muddati cho'zilib ketgani</option>
+                    <option value="Garov talablari" data-key="b1_opt3">Garov ta'minoti (zalog) bo'yicha talablar</option>
+                    <option value="Foizlar farqi" data-key="b1_opt4">Foiz stavkalarining reklamadagidan farq qilishi</option>
+                    <option value="Muammo yo'q" data-key="b1_opt5">Hammasi silliq o'tdi</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label data-key="b2_q">B2. Kredit to'lash jarayoni qanchalik qulay?</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="B_Tulov" value="Ilova (Avto)"><label data-key="b2_opt1">Ilova orqali avtomatik yechiladi (Juda qulay)</label></div>
+                    <div class="option-item"><input type="radio" name="B_Tulov" value="Ilova (Komissiya)"><label data-key="b2_opt2">Ilovada to'layman, lekin komissiya bor</label></div>
+                    <div class="option-item"><input type="radio" name="B_Tulov" value="Bank kassa"><label data-key="b2_opt3">Har oy bankka borishga majburman (Noqulay)</label></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label data-key="b3_q">B3. Kredit bo'yicha shaffoflik darajasi (yalpi qiymat, sug'urta, yashirin to'lovlar):</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="B_Shaffoflik" value="Aniq"><label data-key="b3_opt1">Barchasi shartnomada aniq ko'rsatilgan</label></div>
+                    <div class="option-item"><input type="radio" name="B_Shaffoflik" value="Tushunarsiz to'lovlar"><label data-key="b3_opt2">Tushunarsiz to'lovlar paydo bo'ldi</label></div>
+                    <div class="option-item"><input type="radio" name="B_Shaffoflik" value="Murakkab"><label data-key="b3_opt3">Shartnoma juda murakkab tilda yozilgan</label></div>
+                </div>
+            </div>
+
+            <div class="form-group"><label data-key="rating_bq">KREDIT SIYOSATI (1-5):</label><div class="rating-scale"><label class="rating-item"><input type="radio" name="B_Baho" value="1"><div>1</div></label><label class="rating-item"><input type="radio" name="B_Baho" value="2"><div>2</div></label><label class="rating-item"><input type="radio" name="B_Baho" value="3"><div>3</div></label><label class="rating-item"><input type="radio" name="B_Baho" value="4"><div>4</div></label><label class="rating-item"><input type="radio" name="B_Baho" value="5"><div>5</div></label></div></div>
+        </div>
+
+        <!-- C: DEPOSIT -->
+        <div id="module_omonat" class="module-section">
+            <h3 class="module-title" data-key="mod_c_title">📉 C-MODUL: Omonatlar</h3>
+            
+            <div class="form-group">
+                <label data-key="c1_q">C1. Omonat turi tanlashda siz uchun nima eng muhim?</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="C_Muhim" value="Yuqori foiz"><label data-key="c1_opt1">Yuqori foiz stavkasi</label></div>
+                    <div class="option-item"><input type="radio" name="C_Muhim" value="Istalgan vaqt yechish"><label data-key="c1_opt2">Omonatni istalgan vaqtda yechib olish imkoniyati</label></div>
+                    <div class="option-item"><input type="radio" name="C_Muhim" value="Ilova boshqaruv"><label data-key="c1_opt3">Mobil ilova orqali boshqarish (ochish/yopish)</label></div>
+                    <div class="option-item"><input type="radio" name="C_Muhim" value="Ishonchlilik"><label data-key="c1_opt4">Bankning ishonchliligi</label></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label data-key="c2_q">C2. Agar omonat foizlarini olgan bo'lsangiz, jarayon qanday kechdi?</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="C_Tulanish" value="Vaqtida"><label data-key="c2_opt1">Vaqtida va to'liq tushdi (SMS xabar bilan)</label></div>
+                    <div class="option-item"><input type="radio" name="C_Tulanish" value="Kechikish"><label data-key="c2_opt2">Kechikishlar bo'ldi</label></div>
+                    <div class="option-item"><input type="radio" name="C_Tulanish" value="Xatolik"><label data-key="c2_opt3">Texnik xatolar kuzatildi</label></div>
+                </div>
+            </div>
+
+            <div class="form-group"><label data-key="rating_cq">OMONAT XIZMATI SIFATI (1-5):</label><div class="rating-scale"><label class="rating-item"><input type="radio" name="C_Baho" value="1"><div>1</div></label><label class="rating-item"><input type="radio" name="C_Baho" value="2"><div>2</div></label><label class="rating-item"><input type="radio" name="C_Baho" value="3"><div>3</div></label><label class="rating-item"><input type="radio" name="C_Baho" value="4"><div>4</div></label><label class="rating-item"><input type="radio" name="C_Baho" value="5"><div>5</div></label></div></div>
+        </div>
+
+        <!-- D: CARD -->
+        <div id="module_karta" class="module-section">
+            <h3 class="module-title" data-key="mod_d_title">💳 D-MODUL: Bank Kartalari</h3>
+            
+            <div class="form-group">
+                <label data-key="d1_q">D1. Kartani ochish va qabul qilish:</label>
+                <select name="D_Ochish">
+                    <option value="" data-key="sel_default">-- Tanlang --</option>
+                    <option value="Yetkazib berishdi" data-key="d1_opt1">Bankka bormasdan, yetkazib berishdi</option>
+                    <option value="Tezda oldim" data-key="d1_opt2">Bankka borib, tezda (1 soat ichida) oldim</option>
+                    <option value="Kutish" data-key="d1_opt3">Bir necha kun kutib, qayta-qayta bankka bordim</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label data-key="d2_q">D2. Karta bilan bo'glik eng ko'p uchraydigan muammo?</label>
+                <select name="D_Muammo">
+                    <option value="" data-key="sel_default">-- Tanlang --</option>
+                    <option value="Muammo yo'q" data-key="d2_opt1">Muammo yo'q</option>
+                    <option value="Terminal ishlamaydi" data-key="d2_opt2">Terminalda/Bankomatda ishlamay qolishi</option>
+                    <option value="SMS xato" data-key="d2_opt3">SMS xabarnoma kelmasligi yoki kechikishi</option>
+                    <option value="Balans xato" data-key="d2_opt4">Mobil ilovada balans noto'g'ri ko'rinishi</option>
+                    <option value="Almashtirish qiyin" data-key="d2_opt5">Karta muddati tugaganda almashtirish qiyinligi</option>
+                </select>
+            </div>
+
+            <div class="form-group"><label data-key="rating_dq">KARTA SERVISI SIFATI (1-5):</label><div class="rating-scale"><label class="rating-item"><input type="radio" name="D_Baho" value="1"><div>1</div></label><label class="rating-item"><input type="radio" name="D_Baho" value="2"><div>2</div></label><label class="rating-item"><input type="radio" name="D_Baho" value="3"><div>3</div></label><label class="rating-item"><input type="radio" name="D_Baho" value="4"><div>4</div></label><label class="rating-item"><input type="radio" name="D_Baho" value="5"><div>5</div></label></div></div>
+        </div>
+
+        <!-- E: APP -->
+        <div id="module_ilova" class="module-section">
+            <h3 class="module-title" data-key="mod_e_title">📱 E-MODUL: Mobil Ilova</h3>
+            
+            <div class="form-group">
+                <label data-key="e1_q">E1. Ilova boshqa bank ilovalaridan nimasi bilan afzal?</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="E_Afzallik" value="Dizayn"><label data-key="e1_opt1">Dizayn va qulaylik (UX/UI)</label></div>
+                    <div class="option-item"><input type="radio" name="E_Afzallik" value="Tezlik"><label data-key="e1_opt2">Operatsiyalar tezligi (P2P o'tkazma)</label></div>
+                    <div class="option-item"><input type="radio" name="E_Afzallik" value="Xavfsizlik"><label data-key="e1_opt3">Kirish xavfsizligi (FaceID, PIN)</label></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label data-key="e2_q">E2. Qaysi funksiya ishlashidan norozisiz?</label>
+                <textarea name="E_Shikoyat" rows="2" data-ph="e2_ph" placeholder="Masalan: Tarixni ko'rish, Kommunal to'lov..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label data-key="e3_q">E3. ''Texnik ishlar'' yoki ''qotib qolishi'' qanchalik tez-tez uchraydi?</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="E_Barqarorlik" value="Barqaror"><label data-key="e3_opt1">Juda kam, barqaror ishlaydi</label></div>
+                    <div class="option-item"><input type="radio" name="E_Barqarorlik" value="Oy boshi"><label data-key="e3_opt2">Oy boshi yoki maosh vaqtida qotib qoladi</label></div>
+                    <div class="option-item"><input type="radio" name="E_Barqarorlik" value="Yomon"><label data-key="e3_opt3">Tez-tez ishlamaydi</label></div>
+                </div>
+            </div>
+
+            <div class="form-group"><label data-key="rating_eq">MOBIL ILOVA BAHOSI (1-5):</label><div class="rating-scale"><label class="rating-item"><input type="radio" name="E_Baho" value="1"><div>1</div></label><label class="rating-item"><input type="radio" name="E_Baho" value="2"><div>2</div></label><label class="rating-item"><input type="radio" name="E_Baho" value="3"><div>3</div></label><label class="rating-item"><input type="radio" name="E_Baho" value="4"><div>4</div></label><label class="rating-item"><input type="radio" name="E_Baho" value="5"><div>5</div></label></div></div>
+        </div>
+
+        <!-- F: ATM -->
+        <div id="module_bankomat" class="module-section">
+            <h3 class="module-title" data-key="mod_f_title">🏧 F-MODUL: Bankomatlar</h3>
+            
+            <div class="form-group">
+                <label data-key="f1_q">F1. Sizga kerakli bankomatni topish osonmi?</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="F_Topish" value="Oson"><label data-key="f1_opt1">Ha, shahar bo'ylab ko'p</label></div>
+                    <div class="option-item"><input type="radio" name="F_Topish" value="O'rtacha"><label data-key="f1_opt2">Faqat bank ofisida bor, qidirish kerak</label></div>
+                    <div class="option-item"><input type="radio" name="F_Topish" value="Qiyin"><label data-key="f1_opt3">Yo'q, juda kam</label></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label data-key="f2_q">F2. Bankomatlarning texnik holati:</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="F_Holat" value="Yaxshi"><label data-key="f2_opt1">Doim naqd pul bor va ishlaydi</label></div>
+                    <div class="option-item"><input type="radio" name="F_Holat" value="Yomon"><label data-key="f2_opt2">Tez-tez "Pul yo'q" yoki "Ishlamayapti"</label></div>
+                    <div class="option-item"><input type="radio" name="F_Holat" value="Eski"><label data-key="f2_opt3">Eski, kartani yutib yuborishidan qo'rqaman</label></div>
+                </div>
+            </div>
+
+            <div class="form-group"><label data-key="rating_fq">BANKOMAT TARMOG'I (1-5):</label><div class="rating-scale"><label class="rating-item"><input type="radio" name="F_Baho" value="1"><div>1</div></label><label class="rating-item"><input type="radio" name="F_Baho" value="2"><div>2</div></label><label class="rating-item"><input type="radio" name="F_Baho" value="3"><div>3</div></label><label class="rating-item"><input type="radio" name="F_Baho" value="4"><div>4</div></label><label class="rating-item"><input type="radio" name="F_Baho" value="5"><div>5</div></label></div></div>
+        </div>
+
+        <!-- G: CALL -->
+        <div id="module_call_center" class="module-section">
+            <h3 class="module-title" data-key="mod_g_title">📞 G-MODUL: Call-center va Qo'llab-quvvatlash</h3>
+            
+            <div class="form-group">
+                <label data-key="g1_q">G1. Operatorga ulanish uchun qancha vaqt kutasiz?</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="G_Kutish" value="Darhol"><label data-key="g1_opt1">Darhol ulanadi</label></div>
+                    <div class="option-item"><input type="radio" name="G_Kutish" value="5 daqiqa"><label data-key="g1_opt2">5 daqiqagacha</label></div>
+                    <div class="option-item"><input type="radio" name="G_Kutish" value="Ulanolmadim"><label data-key="g1_opt3">Kutib, ulanolmayman</label></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label data-key="g2_q">G2. Murojaatingiz yechimi topildimi?</label>
+                <div class="radio-group">
+                    <div class="option-item"><input type="radio" name="G_Yechim" value="Ha"><label data-key="g2_opt1">Ha, to'liq</label></div>
+                    <div class="option-item"><input type="radio" name="G_Yechim" value="Qisman"><label data-key="g2_opt2">Operator faqat umumiy gaplar bilan javob berdi</label></div>
+                    <div class="option-item"><input type="radio" name="G_Yechim" value="Yo'q"><label data-key="g2_opt3">Filialga borishni maslahat berishdi</label></div>
+                </div>
+            </div>
+
+            <div class="form-group"><label data-key="rating_gq">QO'LLAB-QUVVATLASH SIFATI (1-5):</label><div class="rating-scale"><label class="rating-item"><input type="radio" name="G_Baho" value="1"><div>1</div></label><label class="rating-item"><input type="radio" name="G_Baho" value="2"><div>2</div></label><label class="rating-item"><input type="radio" name="G_Baho" value="3"><div>3</div></label><label class="rating-item"><input type="radio" name="G_Baho" value="4"><div>4</div></label><label class="rating-item"><input type="radio" name="G_Baho" value="5"><div>5</div></label></div></div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="submit-btn" data-key="btn_submit">Yuborish</button>
+        <div class="loading" id="loading" data-key="msg_sending">Yuborilmoqda, kuting...</div>
+        <div class="error-message" id="errorMessage" data-key="msg_error">Xatolik yuz berdi. Internetni tekshiring.</div>
+    </form>
+    
+    <div class="success-message" id="successMessage">
+        <h2 data-key="msg_thanks">Rahmat!</h2>
+        <p data-key="msg_saved">Javobingiz qabul qilindi. Sizning fikringiz biz uchun muhim!</p>
+        
+        <!-- DASHBOARD -->
+        <div id="dashboard">
+            <h3 data-key="dash_title" style="text-align:center; color:var(--primary-color);">📊 Umumiy Statistika (Live)</h3>
+            <div class="chart-grid">
+                <div class="stats-card">
+                    <div class="stat-number" id="totalCount">...</div>
+                    <div style="font-size:0.9em; opacity:0.8;" data-key="dash_total">Jami ishtirokchilar</div>
+                </div>
+                <div class="chart-container"><canvas id="satisfactionChart"></canvas></div>
+            </div>
+            <div class="chart-grid">
+                <div class="chart-container"><canvas id="genderChart"></canvas></div>
+                <div class="chart-container"><canvas id="sourceChart"></canvas></div>
+            </div>
+            <div class="dashboard-footer" data-key="msg_footer">To'liq tahlil har oyning oxirida e'lon qilib boriladi.</div>
+        </div>
+
+        <button onclick="location.reload()" class="retry-btn" data-key="btn_again" style="margin-top: 30px;">Yana yuborish</button>
+    </div>
+</div>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbzNYjg2Bn2QHqz1hUVU--Qe4jPktwOdYQHsBWl_uo1JbhcQRjhtDg57sFngR-rEeOfa/exec';
+    
+    const regionsJsonUrl = "https://raw.githubusercontent.com/sunattagayev-cloud/Bank-mijozlari-uchun-so-rovnoma/refs/heads/main/hududlar_va_tumanlar.json";
+
+    const banksList = [
+        "AGROBANK", "ALOQABANK", "ANOR BANK", "APEX BANK", "ASAKABANK", "ASIA ALLIANCE BANK", "AVO BANK",
+        "BANK IPAK YO`LI", "BIZNESNI RIVOJLANTIRISH BANKI", "DAVR-BANK", "GARANT BANK", "HAMKORBANK", "HAYOT BANK",
+        "INFINBANK", "IPOTEKA-BANK", "KAPITALBANK", "KDB BANK O`ZBEKISTON", "MADAD INVEST BANK", "MIKROKREDITBANK",
+        "O`ZMILLIYBANK", "O`ZSANOATQURILISHBANK", "OCTOBANK", "OPEN BANK", "ORIENT FINANS BANK", "POYTAXT BANK",
+        "SODEROT BANK", "TBC BANK", "TENGE BANK", "TRASTBANK", "TURONBANK", "UNIVERSAL BANK", "UZUM BANK",
+        "XALQ BANKI", "ZIRAAT BANK UZBEKISTAN"
+    ];
+
+    let currentLang = 'uz';
+    let regionsData = [];
+    let currentUserIP = "";
+    const adminIP = "94.158.58.35"; 
+
+    // Charts references
+    let chartSat = null, chartGen = null, chartSrc = null;
+
+    // --- TARJIMALAR (SO.DOCX VA "LOMBARD" TARMOG'IGA MOS) ---
+    const translations = {
+        uz: {
+            title: "Bank xizmatlarini baholash", intro: "Hurmatli mijoz, sizning fikringiz bizning rivojlanishimiz uchun muhim. So'rovnoma anonim tarzda o'tkaziladi.",
+            sec_general: "I. KIRISH VA PROFIL (Identifikatsiya)",
+            lbl_client_type: "1.1. Siz bank xizmatlaridan kim sifatida foydalanasiz?", opt_person: "Jismoniy shaxs", opt_legal: "Yuridik shaxs (Tadbirkor / Firma rahbari)",
+            lbl_age: "1.2. Sizning yoshingiz?", lbl_region: "1.3. Asosiy hududingiz",  sel_region: "Yuklanmoqda...", sel_district: "Avval hududni tanlang...",
+            lbl_gender: "1.4. Jinsingiz", gender_male: "Erkak", gender_female: "Ayol",
+            lbl_contact: "Bog'lanish uchun (Ixtiyoriy)", contact_hint: "Bank bilan bog'liq muammolarni yechishda aloqa qilish imkoni bo'lishi uchun.", ph_phone: "Telefon raqam", ph_email: "Email manzil",
+            lbl_source: "1.5. Bank haqida qayerdan xabar topdingiz?", sel_default: "-- Tanlang --",
+            src_friends: "Tanishlar", src_ads: "Reklama", src_map: "2GIS / Maps", src_client: "Eski mijoz", src_random: "Tasodifan", src_other: "Boshqa",
+            
+            sec_filter: "II. FILTRLASH (Yo'naltiruvchi qism)",
+            lbl_bank: "2.1. Qaysi bankni baholamoqchisiz?", sel_bank: "Bank nomini tanlang...",
+            lbl_services: "2.1. So'nggi 6 oy ichida bankning qaysi xizmatlaridan foydalandingiz?",
+            srv_ofis: "Bank ofisi (Filial)", srv_kredit: "Kredit mahsulotlari", srv_omonat: "Omonatlar (Depozitlar)", srv_karta: "Bank kartalari", srv_ilova: "Masofaviy xizmatlar (App)", srv_bankomat: "Bankomat va Infokiosk", srv_call: "Aloqa markazi (Call-center)",
+            
+            // Modules
+            mod_a_title: "🏢 A-MODUL: Bank ofisi va Xodimlar", a1_q: "A1. Filialga kirganda navbat kutish vaqtingiz o'rtacha qancha?", 
+            a1_opt1: "Navbat deyarli yo'q (0-5 daqiqa)", a1_opt2: "O'rtacha (5-15 daqiqa)", a1_opt3: "Uzoq (15-40 daqiqa)", a1_opt4: "Juda uzoq (40 daqiqadan ko'p)",
+            a2_q: "A2. Xodimlarning kompetensiyasi va muomalasi:", a2_hint: "(Madaniyat, xushmuomalalik, tanish-bilishchiliksiz xizmat)",
+            rate_good: "A'lo (Barchasi joyida)", rate_ok: "Yaxshi", rate_bad: "Qoniqarsiz (Muammo hal bo'lmadi)", rate_awful: "Yomon (Qo'pol muomala)",
+            a3_q: "A3. Bankdagi qulayliklar bo'yicha fikringiz:", cond_good: "Kutish zali qulay (o'rindiqlar, konditsioner yetarli)", cond_mid: "Sharoit qoniqarli", cond_bad: "Sharoit yomon (joy yetishmaydi, dim, tartibsizlik)",
+            rating_aq: "OFIS XIZMATI SIFATI (1-5):",
+
+            mod_b_title: "💰 B-MODUL: Kreditlar", b1_q: "B1. Kredit olish jarayonidagi eng katta qiyinchilik nima bo'ldi?", 
+            b1_opt1: "Keraksiz hujjatlarning ko'pligi", b1_opt2: "Arizani ko'rib chiqish muddati cho'zilib ketgani", b1_opt3: "Garov ta'minoti (zalog) bo'yicha talablar", b1_opt4: "Foiz stavkalarining reklamadagidan farq qilishi", b1_opt5: "Hammasi silliq o'tdi",
+            b2_q: "B2. Kredit to'lash jarayoni qanchalik qulay?", b2_opt1: "Ilova orqali avtomatik yechiladi (Juda qulay)", b2_opt2: "Ilovada to'layman, lekin komissiya bor", b2_opt3: "Har oy bankka borishga majburman (Noqulay)",
+            b3_q: "B3. Kredit bo'yicha shaffoflik darajasi:", b3_opt1: "Barchasi shartnomada aniq ko'rsatilgan", b3_opt2: "Tushunarsiz to'lovlar paydo bo'ldi", b3_opt3: "Shartnoma juda murakkab tilda yozilgan",
+            rating_bq: "KREDIT SIYOSATI (1-5):",
+
+            mod_c_title: "📉 C-MODUL: Omonatlar", c1_q: "C1. Omonat turi tanlashda siz uchun nima eng muhim?", 
+            c1_opt1: "Yuqori foiz stavkasi", c1_opt2: "Omonatni istalgan vaqtda yechib olish imkoniyati", c1_opt3: "Mobil ilova orqali boshqarish (ochish/yopish)", c1_opt4: "Bankning ishonchliligi",
+            c2_q: "C2. Agar omonat foizlarini olgan bo'lsangiz, jarayon qanday kechdi?", c2_opt1: "Vaqtida va to'liq tushdi (SMS xabar bilan)", c2_opt2: "Kechikishlar bo'ldi", c2_opt3: "Texnik xatolar kuzatildi",
+            rating_cq: "OMONAT XIZMATI SIFATI (1-5):",
+
+            mod_d_title: "💳 D-MODUL: Bank Kartalari", d1_q: "D1. Kartani ochish va qabul qilish:", 
+            d1_opt1: "Bankka bormasdan, yetkazib berishdi", d1_opt2: "Bankka borib, tezda (1 soat ichida) oldim", d1_opt3: "Bir necha kun kutib, qayta-qayta bankka bordim",
+            d2_q: "D2. Karta bilan bo'glik eng ko'p uchraydigan muammo?", d2_opt1: "Muammo yo'q", d2_opt2: "Terminalda/Bankomatda ishlamay qolishi", d2_opt3: "SMS xabarnoma kelmasligi yoki kechikishi", d2_opt4: "Mobil ilovada balans noto'g'ri ko'rinishi", d2_opt5: "Karta muddati tugaganda almashtirish qiyinligi",
+            rating_dq: "KARTA SERVISI SIFATI (1-5):",
+
+            mod_e_title: "📱 E-MODUL: Mobil Ilova", e1_q: "E1. Ilova boshqa bank ilovalaridan nimasi bilan afzal?", 
+            e1_opt1: "Dizayn va qulaylik (UX/UI)", e1_opt2: "Operatsiyalar tezligi (P2P o'tkazma, to'lovlar)", e1_opt3: "Kirish xavfsizligi (FaceID, PIN)",
+            e2_q: "E2. Qaysi funksiya ishlashidan norozisiz? (Ochiq savol)", e2_ph: "Masalan: Tarixni ko'rish, Kommunal to'lov...",
+            e3_q: "E3. ''Texnik ishlar'' yoki dasturning ''qotib qolishi'' qanchalik tez-tez uchraydi?", e3_opt1: "Juda kam, barqaror ishlaydi", e3_opt2: "Oy boshi yoki maosh vaqtida qotib qoladi", e3_opt3: "Tez-tez ishlamaydi",
+            rating_eq: "MOBIL ILOVA BAHOSI (1-5):",
+
+            mod_f_title: "🏧 F-MODUL: Bankomatlar", f1_q: "F1. Sizga kerakli bankomatni topish osonmi?", 
+            f1_opt1: "Ha, shahar bo'ylab ko'p", f1_opt2: "Faqat bank ofisida bor, qidiriish kerak", f1_opt3: "Yo'q, juda kam",
+            f2_q: "F2. Bankomatlarning texnik holati:", f2_opt1: "Doim naqd pul bor va ishlaydi", f2_opt2: "Tez-tez ''Pul yo'q'' yoki ''Ishlamayapti'' holatiga duch kelaman", f2_opt3: "Eski, kartani yutib yuborishidan qo'rqaman",
+            rating_fq: "BANKOMAT TARMOG'I (1-5):",
+
+            mod_g_title: "📞 G-MODUL: Call-center va Qo'llab-quvvatlash", g1_q: "G1. Operatorga ulanish uchun qancha vaqt kutasiz?", 
+            g1_opt1: "Darhol ulanadi", g1_opt2: "5 daqiqagacha", g1_opt3: "Kutib, ulanolmayman",
+            g2_q: "G2. Murojaatingiz yechimi topildimi?", g2_opt1: "Ha, to'liq", g2_opt2: "Operator faqat umumiy gaplar bilan javob berdi", g2_opt3: "Filialga borishni maslahat berishdi (yechim berilmadi)",
+            rating_gq: "QO'LLAB-QUVVATLASH SIFATI (1-5):",
+
+            btn_submit: "Yuborish", msg_sending: "Yuborilmoqda, kuting...", msg_error: "Xatolik yuz berdi. Internetni tekshiring.", msg_thanks: "Rahmat!", msg_saved: "Javobingiz qabul qilindi. Tez orada tahlil e'lon qilinadi.", 
+            btn_again: "Yana yuborish", dash_title: "📊 Umumiy Statistika (Live)", dash_total: "Jami ishtirokchilar", msg_footer: "To'liq tahlil har oyning oxirida e'lon qilib boriladi.",
+            alert_limit: "Siz bugun ushbu bankka ovoz berib bo'ldingiz!", alert_select: "Iltimos, kamida bitta xizmatni tanlang!"
+        },
+        // RUSCHA TARJIMALAR (Moslashtirilgan)
+        ru: {
+            title: "Оценка банковских услуг", intro: "Уважаемый клиент, ваше мнение важно для нашего развития. Опрос проводится анонимно.",
+            sec_general: "I. ВВЕДЕНИЕ И ПРОФИЛЬ (Идентификация)",
+            lbl_client_type: "1.1. Вы пользуетесь услугами банка как:", opt_person: "Физическое лицо", opt_legal: "Юридическое лицо (Предприниматель)",
+            lbl_age: "1.2. Ваш возраст?", lbl_region: "1.3. Основной регион", sel_region: "Загрузка...", sel_district: "Сначала выберите регион...",
+            lbl_gender: "1.4. Ваш пол", gender_male: "Мужской", gender_female: "Женский",
+            lbl_contact: "Контакты (Необязательно)", contact_hint: "Для связи при решении проблем с банком.", ph_phone: "Номер телефона", ph_email: "Email адрес",
+            lbl_source: "1.5. Откуда вы узнали о банке?", sel_default: "-- Выберите --",
+            src_friends: "Знакомые", src_ads: "Реклама", src_map: "2GIS / Карты", src_client: "Старый клиент", src_random: "Случайно", src_other: "Другое",
+            
+            sec_filter: "II. ФИЛЬТР (Направляющая часть)",
+            lbl_bank: "2.1. Какой банк вы хотите оценить?", sel_bank: "Выберите название банка...",
+            lbl_services: "2.1. Какими услугами банка вы пользовались за последние 6 месяцев?",
+            srv_ofis: "Офис банка (Филиал)", srv_kredit: "Кредитные продукты", srv_omonat: "Вклады (Депозиты)", srv_karta: "Банковские карты", srv_ilova: "Дистанционные услуги (App)", srv_bankomat: "Банкомат и Инфокиоск", srv_call: "Колл-центр",
+            
+            mod_a_title: "🏢 МОДУЛЬ А: Офис и Персонал", a1_q: "A1. Среднее время ожидания в очереди?", 
+            a1_opt1: "Очереди почти нет (0-5 минут)", a1_opt2: "Среднее (5-15 минут)", a1_opt3: "Долго (15-40 минут)", a1_opt4: "Очень долго (более 40 минут)",
+            a2_q: "A2. Компетентность персонала и отношение:", a2_hint: "(Культура, вежливость, обслуживание без знакомств)",
+            rate_good: "Отлично (Все хорошо)", rate_ok: "Хорошо", rate_bad: "Удовлетворительно (Проблема не решена)", rate_awful: "Плохо (Грубое отношение)",
+            a3_q: "A3. Ваши мысли об условиях в банке:", cond_good: "Удобный зал ожидания (кресла, кондиционер)", cond_mid: "Условия удовлетворительные", cond_bad: "Условия плохие (тесно, душно, беспорядок)",
+            rating_aq: "КАЧЕСТВО ОБСЛУЖИВАНИЯ (1-5):",
+
+            mod_b_title: "💰 МОДУЛЬ B: Кредиты", b1_q: "B1. Самая большая сложность при получении кредита?", 
+            b1_opt1: "Много ненужных документов", b1_opt2: "Затягивание сроков рассмотрения заявки", b1_opt3: "Требования по залоговому обеспечению", b1_opt4: "Различие процентных ставок от рекламы", b1_opt5: "Все прошло гладко",
+            b2_q: "B2. Насколько удобен процесс оплаты кредита?", b2_opt1: "Автоматически через приложение (Очень удобно)", b2_opt2: "Плачу в приложении, но есть комиссия", b2_opt3: "Вынужден ходить в банк каждый месяц (Неудобно)",
+            b3_q: "B3. Уровень прозрачности по кредиту:", b3_opt1: "Все четко указано в договоре", b3_opt2: "Появились непонятные платежи", b3_opt3: "Договор написан очень сложным языком",
+            rating_bq: "КРЕДИТНАЯ ПОЛИТИКА (1-5):",
+
+            mod_c_title: "📉 МОДУЛЬ C: Вклады", c1_q: "C1. Что для вас важнее всего при выборе вклада?", 
+            c1_opt1: "Высокая процентная ставка", c1_opt2: "Возможность снятия денег в любое время", c1_opt3: "Управление через приложение (открытие/закрытие)", c1_opt4: "Надежность банка",
+            c2_q: "C2. Если вы получали проценты по вкладу, как прошел процесс?", c2_opt1: "Вовремя и полностью (с СМС сообщением)", c2_opt2: "Были задержки", c2_opt3: "Наблюдались технические ошибки",
+            rating_cq: "КАЧЕСТВО УСЛУГ ВКЛАДОВ (1-5):",
+
+            mod_d_title: "💳 МОДУЛЬ D: Банковские карты", d1_q: "D1. Открытие и получение карты:", 
+            d1_opt1: "Доставили без посещения банка", d1_opt2: "Пошел в банк и получил быстро (за 1 час)", d1_opt3: "Ждал несколько дней, ходил в банк повторно",
+            d2_q: "D2. Самая частая проблема с картой?", d2_opt1: "Нет проблем", d2_opt2: "Не работает в терминале/банкомате", d2_opt3: "СМС оповещения не приходят или задерживаются", d2_opt4: "Неверный баланс в мобильном приложении", d2_opt5: "Сложно заменить карту по истечении срока",
+            rating_dq: "БОНУСЫ КАРТЫ (1-5):",
+
+            mod_e_title: "📱 МОДУЛЬ E: Мобильное приложение", e1_q: "E1. Чем приложение лучше других банковских приложений?", 
+            e1_opt1: "Дизайн и удобство (UX/UI)", e1_opt2: "Скорость операций (P2P переводы, оплата)", e1_opt3: "Безопасность входа (FaceID, PIN)",
+            e2_q: "E2. Работой какой функции вы недовольны? (Открытый вопрос)", e2_ph: "Например: Просмотр истории, Коммунальные платежи...",
+            e3_q: "E3. Как часто приложение ''зависает'' или идут ''тех. работы''?", e3_opt1: "Очень редко, работает стабильно", e3_opt2: "Зависает в начале месяца или в дни зарплаты", e3_opt3: "Часто не работает",
+            rating_eq: "ОЦЕНКА ПРИЛОЖЕНИЯ (1-5):",
+
+            mod_f_title: "🏧 МОДУЛЬ F: Банкоматы", f1_q: "F1. Легко ли найти нужный банкомат?", 
+            f1_opt1: "Да, их много по городу", f1_opt2: "Есть только в офисе банка, надо искать", f1_opt3: "Нет, очень мало",
+            f2_q: "F2. Техническое состояние банкоматов:", f2_opt1: "Всегда есть наличные и работает", f2_opt2: "Часто сталкиваюсь с ''Нет денег'' или ''Не работает''", f2_opt3: "Старые, боюсь что ''съест'' карту",
+            rating_fq: "СЕТЬ БАНКОМАТОВ (1-5):",
+
+            mod_g_title: "📞 МОДУЛЬ G: Колл-центр", g1_q: "G1. Сколько времени вы ждете соединения с оператором?", 
+            g1_opt1: "Соединяет сразу", g1_opt2: "До 5 минут", g1_opt3: "Жду, не могу дозвониться",
+            g2_q: "G2. Найдено ли решение вашего обращения?", g2_opt1: "Да, полностью", g2_opt2: "Оператор ответил общими фразами", g2_opt3: "Посоветовали пойти в филиал (решения не дали)",
+            rating_gq: "КАЧЕСТВО ПОДДЕРЖКИ (1-5):",
+
+            btn_submit: "Отправить", msg_sending: "Отправка...", msg_error: "Ошибка! Проверьте интернет.", msg_thanks: "Спасибо!", msg_saved: "Ваш ответ принят. Скоро будет опубликован анализ.",
+            btn_again: "Отправить еще", dash_title: "📊 Статистика (Live)", dash_total: "Всего участников", msg_footer: "Полный анализ публикуется в конце каждого месяца.",
+            alert_limit: "Вы уже голосовали за этот банк сегодня!", alert_select: "Пожалуйста, выберите хотя бы одну услугу!"
+        },
+        // INGLIZCHA (Tahminiy context bo'yicha)
+        en: {
+            title: "Bank Service Evaluation", intro: "Dear customer, your opinion is important for our development. The survey is anonymous.",
+            sec_general: "I. INTRO & PROFILE",
+            lbl_client_type: "1.1. You use bank services as:", opt_person: "Individual", opt_legal: "Legal Entity (Entrepreneur)",
+            lbl_age: "1.2. Your age?", lbl_region: "1.3. Main Region", sel_region: "Loading...", sel_district: "Select region first...",
+            lbl_gender: "1.4. Gender", gender_male: "Male", gender_female: "Female",
+            lbl_contact: "Contact (Optional)", contact_hint: "To enable us to contact you for resolving bank-related issues.", ph_phone: "Phone number", ph_email: "Email address",
+            lbl_source: "1.5. How did you hear about the bank?", sel_default: "-- Select --",
+            src_friends: "Friends", src_ads: "Advertising", src_map: "2GIS / Maps", src_client: "Returning client", src_random: "Randomly", src_other: "Other",
+            
+            sec_filter: "II. FILTER",
+            lbl_bank: "2.1. Which bank do you want to rate?", sel_bank: "Select Bank Name...",
+            lbl_services: "2.1. Which services have you used in the last 6 months?",
+            srv_ofis: "Bank Office (Branch)", srv_kredit: "Credit Products", srv_omonat: "Deposits", srv_karta: "Bank Cards", srv_ilova: "Remote Services (App)", srv_bankomat: "ATM & Kiosk", srv_call: "Call-center",
+            
+            mod_a_title: "🏢 MODULE A: Office & Staff", a1_q: "A1. Average queue waiting time?", 
+            a1_opt1: "Almost no queue (0-5 min)", a1_opt2: "Average (5-15 min)", a1_opt3: "Long (15-40 min)", a1_opt4: "Very long (40+ min)",
+            a2_q: "A2. Staff competence and attitude:", a2_hint: "(Culture, politeness, unbiased service)",
+            rate_good: "Excellent", rate_ok: "Good", rate_bad: "Satisfactory (Issue not solved)", rate_awful: "Bad (Rude)",
+            a3_q: "A3. Conditions in the bank:", cond_good: "Comfortable (Seats, AC)", cond_mid: "Satisfactory", cond_bad: "Bad (Crowded, stuffy)",
+            rating_aq: "OFFICE QUALITY (1-5):",
+
+            mod_b_title: "💰 MODULE B: Credits", b1_q: "B1. Biggest difficulty in getting a loan?", 
+            b1_opt1: "Too many documents", b1_opt2: "Process took too long", b1_opt3: "Collateral requirements", b1_opt4: "Interest rate diff vs ads", b1_opt5: "Went smoothly",
+            b2_q: "B2. Payment convenience?", b2_opt1: "Auto-pay via App (Very convenient)", b2_opt2: "Via App but with fee", b2_opt3: "Must visit bank monthly (Inconvenient)",
+            b3_q: "B3. Transparency level:", b3_opt1: "Everything clear in contract", b3_opt2: "Hidden fees appeared", b3_opt3: "Contract language too complex",
+            rating_bq: "CREDIT POLICY (1-5):",
+
+            mod_c_title: "📉 MODULE C: Deposits", c1_q: "C1. Most important factor?", 
+            c1_opt1: "High interest rate", c1_opt2: "Withdraw anytime", c1_opt3: "App management", c1_opt4: "Bank reliability",
+            c2_q: "C2. Payout process experience?", c2_opt1: "On time & full (with SMS)", c2_opt2: "Delays occurred", c2_opt3: "Technical errors",
+            rating_cq: "DEPOSIT QUALITY (1-5):",
+
+            mod_d_title: "💳 MODULE D: Cards", d1_q: "D1. Opening and receiving:", 
+            d1_opt1: "Delivered (No visit)", d1_opt2: "Visited bank, got fast (1 hr)", d1_opt3: "Waited days, visited repeatedly",
+            d2_q: "D2. Most common issue?", d2_opt1: "No issues", d2_opt2: "Fails at Terminal/ATM", d2_opt3: "No SMS notification", d2_opt4: "Wrong balance in App", d2_opt5: "Hard to replace on expiry",
+            rating_dq: "CARD SERVICE (1-5):",
+
+            mod_e_title: "📱 MODULE E: Mobile App", e1_q: "E1. Advantage over other apps?", 
+            e1_opt1: "Design & UX/UI", e1_opt2: "Speed (P2P)", e1_opt3: "Security (FaceID, PIN)",
+            e2_q: "E2. Function you are unhappy with?", e2_ph: "Ex: History view, Utility payment...",
+            e3_q: "E3. Stability / Freezes?", e3_opt1: "Rare, works stable", e3_opt2: "Freezes on payday/month start", e3_opt3: "Often down",
+            rating_eq: "APP RATING (1-5):",
+
+            mod_f_title: "🏧 MODULE F: ATMs", f1_q: "F1. Easy to find ATM?", 
+            f1_opt1: "Yes, many in city", f1_opt2: "Only at branches, hard to find", f1_opt3: "No, very few",
+            f2_q: "F2. Technical condition:", f2_opt1: "Always has cash & works", f2_opt2: "Often 'No Cash' or 'Broken'", f2_opt3: "Old, afraid it eats card",
+            rating_fq: "ATM NETWORK (1-5):",
+
+            mod_g_title: "📞 MODULE G: Call-center", g1_q: "G1. Wait time for operator?", 
+            g1_opt1: "Instant", g1_opt2: "Up to 5 min", g1_opt3: "Waited, couldn't connect",
+            g2_q: "G2. Was solution found?", g2_opt1: "Yes, fully", g2_opt2: "Generic answers only", g2_opt3: "Advised to visit branch (No solution)",
+            rating_gq: "SUPPORT QUALITY (1-5):",
+
+            btn_submit: "Submit", msg_sending: "Sending...", msg_error: "Error! Check internet.", msg_thanks: "Thanks!", msg_saved: "Response accepted.",
+            btn_again: "Submit again", dash_title: "📊 Live Stats", dash_total: "Total Participants", msg_footer: "Full analysis published monthly.",
+            alert_limit: "You have already rated this bank today!", alert_select: "Please select at least one service!"
+        }
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+        initData();
+        loadBanksSelect();
+        
+        // IP aniqlash
+        fetch('https://api.ipify.org?format=json')
+            .then(r => r.json())
+            .then(d => { 
+                document.getElementById('userIP').value = d.ip; 
+                currentUserIP = d.ip;
+            })
+            .catch(e => console.log(e));
+
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.body.setAttribute('data-theme', savedTheme);
+        document.getElementById('themeToggle').innerText = savedTheme === 'dark' ? '🌙' : '☀️';
+
+        setLanguage('uz'); // Default language
+    });
+
+    // Tillarni almashtirish
+    function setLanguage(lang) {
+        currentLang = lang;
+        const t = translations[lang];
+
+        document.querySelectorAll('[data-key]').forEach(elem => {
+            const key = elem.getAttribute('data-key');
+            if (t[key]) elem.innerText = t[key];
+        });
+
+        document.querySelectorAll('[data-ph]').forEach(elem => {
+            const key = elem.getAttribute('data-ph');
+            if (t[key]) elem.setAttribute('placeholder', t[key]);
+        });
+
+        document.querySelectorAll('.lang-switch button').forEach(btn => btn.classList.remove('active'));
+        document.getElementById(`btn-${lang}`).classList.add('active');
+        localStorage.setItem('preferredLanguage', lang);
+        
+        populateRegions();
+    }
+
+    async function initData() {
+        try {
+            const res = await fetch(regionsJsonUrl);
+            regionsData = await res.json();
+            populateRegions();
+        } catch (error) { console.error(error); }
+    }
+
+    function loadBanksSelect() {
+        const select = document.getElementById('bankSelect');
+        banksList.sort();
+        banksList.forEach(bank => {
+            const option = document.createElement('option');
+            option.value = bank;
+            option.innerText = bank;
+            select.appendChild(option);
+        });
+    }
+
+    // HUDUDLAR LOGIKASI (3 Ta til uchun)
+    function populateRegions() {
+        const regionSelect = document.getElementById('regionSelect');
+        const t = translations[currentLang];
+        
+        if(!regionsData || regionsData.length === 0) return;
+        const currentVal = regionSelect.value; 
+
+        regionSelect.innerHTML = `<option value="">${t.sel_region}</option>`;
+        
+        regionsData.forEach((region) => {
+            const opt = document.createElement('option');
+            // JSON kalitlari: name_uz, name_ru, name_en
+            const langKey = 'name_' + currentLang;
+            const regionName = region[langKey] || region.name_uz;
+            opt.value = region.name_uz; 
+            opt.innerText = regionName;
+            regionSelect.appendChild(opt);
+        });
+        regionSelect.value = currentVal;
+    }
+
+    document.getElementById('regionSelect').addEventListener('change', function() {
+        const selRegion = this.value; 
+        const districtSelect = document.getElementById('districtSelect');
+        const t = translations[currentLang];
+        
+        districtSelect.innerHTML = `<option value="">${t.sel_district}</option>`;
+
+        const regionObj = regionsData.find(r => r.name_uz === selRegion);
+        
+        if (regionObj && regionObj.districts) {
+            regionObj.districts.forEach(dist => {
+                 const opt = document.createElement('option');
+                 const langKey = 'name_' + currentLang;
+                 const distName = dist[langKey] || dist.name_uz;
+                 opt.value = dist.name_uz;
+                 opt.innerText = distName;
+                 districtSelect.appendChild(opt);
+            });
+        }
+    });
+
+    window.toggleAgeField = function() {
+        const type = document.querySelector('input[name="Mijoz_Tipi"]:checked')?.value;
+        const ageDiv = document.getElementById('ageField');
+        if (type === 'Jismoniy shaxs') {
+            ageDiv.style.display = 'block';
+            ageDiv.querySelectorAll('input').forEach(i => i.required = true);
+        } else {
+            ageDiv.style.display = 'none';
+            ageDiv.querySelectorAll('input').forEach(i => {
+                i.required = false;
+                i.checked = false;
+            });
+        }
+    }
+
+    // MODULLAR (DISABLED/ENABLED LOGIKASI)
+    window.toggleModules = function() {
+        const checkedServices = Array.from(document.querySelectorAll('input[name="Xizmatlar"]:checked')).map(cb => cb.value);
+        const map = { 'Ofis': 'module_ofis', 'Kredit': 'module_kredit', 'Omonat': 'module_omonat', 'Karta': 'module_karta', 'Ilova': 'module_ilova', 'Bankomat': 'module_bankomat', 'Call-center': 'module_call_center' };
+
+        Object.values(map).forEach(id => {
+            const el = document.getElementById(id);
+            el.classList.remove('active');
+            el.querySelectorAll('input, select, textarea').forEach(input => { input.disabled = true; input.required = false; });
+        });
+
+        checkedServices.forEach(srv => {
+            const modId = map[srv];
+            if (modId) {
+                const el = document.getElementById(modId);
+                el.classList.add('active');
+                el.querySelectorAll('input, select, textarea').forEach(input => { input.disabled = false; });
+                const radios = el.querySelectorAll('.rating-scale input[type="radio"]');
+                if(radios.length > 0) radios[0].required = true; 
+            }
+        });
+    }
+
+    // FORMA YUBORISH
+    const form = document.getElementById('bankForm');
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        const t = translations[currentLang];
+        
+        // 1. BANK LIMIT TECHKSHIRUV
+        const selectedBank = document.getElementById('bankSelect').value;
+        if (!selectedBank) return;
+
+        if (currentUserIP !== adminIP) {
+            let history = JSON.parse(localStorage.getItem('bankHistory')) || {};
+            const today = new Date().toDateString();
+            
+            if (history[selectedBank] === today) {
+                alert(t.alert_limit);
+                return;
+            }
+        }
+
+        // 2. XIZMAT TANLANGANLIGINI TEKSHIRISH
+        const services = document.querySelectorAll('input[name="Xizmatlar"]:checked');
+        if (services.length === 0) {
+            alert(t.alert_select);
+            return;
+        }
+
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = "0.5";
+        loading.style.display = 'block';
+        document.getElementById('errorMessage').style.display = 'none';
+
+        const formData = new FormData(form);
+        const xizmatlarArr = [];
+        services.forEach(s => xizmatlarArr.push(s.value));
+        formData.set('Xizmatlar', xizmatlarArr.join(", "));
+
+        fetch(scriptURL, { method: 'POST', body: formData })
+        .then(res => {
+            if (currentUserIP !== adminIP) {
+                let history = JSON.parse(localStorage.getItem('bankHistory')) || {};
+                history[document.getElementById('bankSelect').value] = new Date().toDateString();
+                localStorage.setItem('bankHistory', JSON.stringify(history));
+            }
+
+            loading.style.display = 'none';
+            form.style.display = 'none';
+            document.querySelector('.header').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'block';
+            
+            loadDashboard(); 
+        })
+        .catch(error => {
+            console.error(error);
+            loading.style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.style.opacity = "1";
+        });
+    });
+
+    // DASHBOARD FUNKSIYALARI
+    function loadDashboard() {
+        document.getElementById('dashboard').style.display = 'block';
+        
+        fetch(scriptURL)
+            .then(r => r.json())
+            .then(data => {
+                document.getElementById('totalCount').innerText = data.total;
+                renderCharts(data);
+            })
+            .catch(e => console.log("Dashboard fetch error:", e));
+    }
+
+    function renderCharts(data) {
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const txtColor = isDark ? '#ddd' : '#333';
+
+        if(chartSat) chartSat.destroy();
+        chartSat = new Chart(document.getElementById('satisfactionChart'), {
+            type: 'doughnut',
+            data: { labels: Object.keys(data.satisfaction), datasets: [{ data: Object.values(data.satisfaction), backgroundColor: ['#28a745', '#ffc107', '#dc3545', '#6c757d'] }] },
+            options: { plugins: { title: { display:true, text: 'Xodimlar Bahosi', color: txtColor }, legend: {labels:{color:txtColor}} }, maintainAspectRatio:false }
+        });
+
+        if(chartGen) chartGen.destroy();
+        chartGen = new Chart(document.getElementById('genderChart'), {
+            type: 'pie',
+            data: { labels: Object.keys(data.gender), datasets: [{ data: Object.values(data.gender), backgroundColor: ['#36A2EB', '#FF6384'] }] },
+            options: { plugins: { title: { display:true, text: 'Jins', color: txtColor }, legend: {labels:{color:txtColor}} }, maintainAspectRatio:false }
+        });
+
+        if(chartSrc) chartSrc.destroy();
+        chartSrc = new Chart(document.getElementById('sourceChart'), {
+            type: 'bar',
+            data: { labels: Object.keys(data.sources), datasets: [{ label: 'Odam', data: Object.values(data.sources), backgroundColor: '#D4AF37' }] },
+            options: { plugins: { title: { display:true, text: 'Manba', color: txtColor }, legend:{display:false} }, scales:{x:{ticks:{color:txtColor}}, y:{ticks:{color:txtColor}}}, maintainAspectRatio:false }
+        });
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        const body = document.body;
+        const newTheme = body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        body.setAttribute('data-theme', newTheme);
+        document.getElementById('themeToggle').innerText = newTheme === 'dark' ? '🌙' : '☀️';
+        localStorage.setItem('theme', newTheme);
+    });
+</script>
+
+</body>
+</html>
