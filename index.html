@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -104,8 +104,8 @@
     <div class="top-bar">
         <button class="theme-toggle" id="themeToggle" title="Tun/Kun">☀️</button>
         <div class="lang-switch">
-            <button onclick="setLanguage('uz')" id="btn-uz" class="active">O'Z</button>
-            <button onclick="setLanguage('ru')" id="btn-ru">РУ</button>
+            <button onclick="setLanguage('uz')" id="btn-uz">O'Z</button>
+            <button onclick="setLanguage('ru')" id="btn-ru" class="active">РУ</button>
             <button onclick="setLanguage('en')" id="btn-en">EN</button>
         </div>
     </div>
@@ -458,7 +458,7 @@
         "XALQ BANKI", "ZIRAAT BANK UZBEKISTAN"
     ];
 
-    let currentLang = 'uz';
+    let currentLang = 'ru';
     let regionsData = [];
     let currentUserIP = "";
     const adminIP = "94.158.58.35"; 
@@ -664,7 +664,7 @@
         document.body.setAttribute('data-theme', savedTheme);
         document.getElementById('themeToggle').innerText = savedTheme === 'dark' ? '🌙' : '☀️';
 
-        setLanguage('uz'); // Default language
+        setLanguage('ru'); // Default language
     });
 
     // Tillarni almashtirish
