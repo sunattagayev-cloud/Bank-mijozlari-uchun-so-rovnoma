@@ -96,7 +96,13 @@
         @media (min-width: 600px) { .chart-grid { grid-template-columns: 1fr 1fr; } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .retry-btn { margin-top:15px; padding:10px 20px; background: var(--accent-color); color:#000; border:none; border-radius:4px; font-weight:bold; cursor:pointer; }
-    </style>
+        
+        .nps-scale { display: flex; justify-content: space-between; margin: 15px 0 5px 0; overflow-x: auto; gap: 5px; }
+        .nps-item { text-align: center; flex: 1; cursor: pointer; }
+        .nps-item input { margin-bottom: 5px; cursor: pointer; width: 16px; height: 16px; }
+        .nps-item div { font-size: 0.9em; font-weight: bold; opacity: 0.9; }
+        .nps-labels { display: flex; justify-content: space-between; font-size: 0.75em; color: var(--text-color); opacity: 0.8; margin-top: 5px; font-style: italic;}
+   </style>
 </head>
 <body>
 
@@ -414,6 +420,36 @@
             <div class="form-group"><label data-key="rating_gq">QO'LLAB-QUVVATLASH SIFATI (1-5):</label><div class="rating-scale"><label class="rating-item"><input type="radio" name="G_Baho" value="1"><div>1</div></label><label class="rating-item"><input type="radio" name="G_Baho" value="2"><div>2</div></label><label class="rating-item"><input type="radio" name="G_Baho" value="3"><div>3</div></label><label class="rating-item"><input type="radio" name="G_Baho" value="4"><div>4</div></label><label class="rating-item"><input type="radio" name="G_Baho" value="5"><div>5</div></label></div></div>
         </div>
 
+        <!-- III. YAKUNIY BAHOLASH (NPS) -->
+        <h3 style="color: var(--text-color); border-bottom: 1px solid var(--input-border); padding-bottom: 5px; font-size: 1.1em; margin-top: 30px;" data-key="sec_final">III. YAKUNIY BAHOLASH (NPS va Xulosa)</h3>
+
+        <div class="form-group">
+            <label data-key="lbl_nps">4.1. (NPS) Ushbu bankni yaqinlaringizga tavsiya qilish ehtimolingiz qanday?</label>
+            <div class="nps-scale">
+                <label class="nps-item"><input type="radio" name="NPS" value="0" required><div>0</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="1"><div>1</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="2"><div>2</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="3"><div>3</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="4"><div>4</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="5"><div>5</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="6"><div>6</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="7"><div>7</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="8"><div>8</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="9"><div>9</div></label>
+                <label class="nps-item"><input type="radio" name="NPS" value="10"><div>10</div></label>
+            </div>
+            <div class="nps-labels">
+                <span data-key="nps_0">0 (Xech qachon)</span>
+                <span data-key="nps_5">5 (Bilmadim)</span>
+                <span data-key="nps_10">10 (Albatta tavsiya qilaman)</span>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label data-key="lbl_suggestion">4.2. Bank uchun eng muhim taklifingiz:</label>
+            <textarea name="Taklif" rows="3" data-ph="ph_suggestion" placeholder="Iltimos, ... ni o'zgartiring/qo'shing" required></textarea>
+        </div>
+
         <button type="submit" id="submitBtn" class="submit-btn" data-key="btn_submit">Yuborish</button>
         <div class="loading" id="loading" data-key="msg_sending">Yuborilmoqda, kuting...</div>
         <div class="error-message" id="errorMessage" data-key="msg_error">Xatolik yuz berdi. Internetni tekshiring.</div>
@@ -525,7 +561,14 @@
 
             btn_submit: "Yuborish", msg_sending: "Yuborilmoqda, kuting...", msg_error: "Xatolik yuz berdi. Internetni tekshiring.", msg_thanks: "Rahmat!", msg_saved: "Javobingiz qabul qilindi. Tez orada tahlil e'lon qilinadi.", 
             btn_again: "Yana yuborish", dash_title: "📊 Umumiy Statistika (Live)", dash_total: "Jami ishtirokchilar", msg_footer: "To'liq tahlil har oyning oxirida e'lon qilib boriladi.",
-            alert_limit: "Siz bugun ushbu bankka ovoz berib bo'ldingiz!", alert_select: "Iltimos, kamida bitta xizmatni tanlang!"
+            alert_limit: "Siz bugun ushbu bankka ovoz berib bo'ldingiz!", alert_select: "Iltimos, kamida bitta xizmatni tanlang!",
+
+            sec_final: "III. YAKUNIY BAHOLASH (NPS va Xulosa)",
+            lbl_nps: "4.1. (NPS) Ushbu bankni yaqinlaringizga tavsiya qilish ehtimolingiz qanday?",
+            nps_0: "0 (Xech qachon)", nps_5: "5 (Bilmadim)", nps_10: "10 (Albatta tavsiya qilaman)",
+            lbl_suggestion: "4.2. Bank uchun eng muhim taklifingiz:",
+            ph_suggestion: "Iltimos, ... ni o'zgartiring/qo'shing"
+
         },
         // RUSCHA TARJIMALAR (Moslashtirilgan)
         ru: {
@@ -584,7 +627,14 @@
 
             btn_submit: "Отправить", msg_sending: "Отправка...", msg_error: "Ошибка! Проверьте интернет.", msg_thanks: "Спасибо!", msg_saved: "Ваш ответ принят. Скоро будет опубликован анализ.",
             btn_again: "Отправить еще", dash_title: "📊 Статистика (Live)", dash_total: "Всего участников", msg_footer: "Полный анализ публикуется в конце каждого месяца.",
-            alert_limit: "Вы уже голосовали за этот банк сегодня!", alert_select: "Пожалуйста, выберите хотя бы одну услугу!"
+            alert_limit: "Вы уже голосовали за этот банк сегодня!", alert_select: "Пожалуйста, выберите хотя бы одну услугу!",
+
+            sec_final: "III. ИТОГОВАЯ ОЦЕНКА (NPS и Вывод)",
+            lbl_nps: "4.1. (NPS) Какова вероятность того, что вы порекомендуете этот банк своим близким?",
+            nps_0: "0 (Никогда)", nps_5: "5 (Не знаю)", nps_10: "10 (Обязательно порекомендую)",
+            lbl_suggestion: "4.2. Ваше самое важное предложение для банка:",
+            ph_suggestion: "Пожалуйста, измените/добавьте ..."
+
         },
         // INGLIZCHA (Tahminiy context bo'yicha)
         en: {
@@ -643,7 +693,13 @@
 
             btn_submit: "Submit", msg_sending: "Sending...", msg_error: "Error! Check internet.", msg_thanks: "Thanks!", msg_saved: "Response accepted.",
             btn_again: "Submit again", dash_title: "📊 Live Stats", dash_total: "Total Participants", msg_footer: "Full analysis published monthly.",
-            alert_limit: "You have already rated this bank today!", alert_select: "Please select at least one service!"
+            alert_limit: "You have already rated this bank today!", alert_select: "Please select at least one service!",
+
+            sec_final: "III. FINAL EVALUATION (NPS & Conclusion)",
+            lbl_nps: "4.1. (NPS) How likely are you to recommend this bank to your friends or family?",
+            nps_0: "0 (Never)", nps_5: "5 (Not sure)", nps_10: "10 (Definitely will recommend)",
+            lbl_suggestion: "4.2. Your most important suggestion for the bank:",
+            ph_suggestion: "Please change/add ..."
         }
     };
 
